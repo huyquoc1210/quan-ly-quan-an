@@ -12,23 +12,20 @@ export async function POST(request: Request) {
   const body = (await request.json()) as LoginBodyType;
   // console.log(body);
   const cookieStore = await cookies();
+
   try {
     const { payload } = await authApiRequest.sLogin(body);
     const { accessToken, refreshToken } = payload.data;
     const decodeAccessToken = jwt.decode(accessToken) as ExpProps;
     const decodeRefreshToken = jwt.decode(refreshToken) as ExpProps;
-    cookieStore.set({
-      name: "accessToken",
-      value: accessToken,
+    cookieStore.set("accessToken", accessToken, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
       secure: true,
       expires: decodeAccessToken.exp * 100,
     });
-    cookieStore.set({
-      name: "refreshToken",
-      value: refreshToken,
+    cookieStore.set("refreshToken", refreshToken, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
