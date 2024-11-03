@@ -23,14 +23,14 @@ export async function POST(request: Request) {
       path: "/",
       sameSite: "lax",
       secure: true,
-      expires: decodeAccessToken.exp * 100,
+      expires: decodeAccessToken.exp * 1000,
     });
     cookieStore.set("refreshToken", refreshToken, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
       secure: true,
-      expires: decodeRefreshToken.exp * 100,
+      expires: decodeRefreshToken.exp * 1000,
     });
 
     return Response.json(payload);
