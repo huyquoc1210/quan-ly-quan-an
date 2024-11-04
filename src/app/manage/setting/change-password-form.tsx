@@ -13,7 +13,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useChangePasswordMutation } from "@/queries/useAccount";
 import { toast } from "@/hooks/use-toast";
-import { handleErrorApi } from "@/lib/utils";
+import {
+  handleErrorApi,
+  setAccessTokenFromLocalStorage,
+  setRefreshTokenFromLocalStorage,
+} from "@/lib/utils";
 
 export default function ChangePasswordForm() {
   const changePasswordMutation = useChangePasswordMutation();
@@ -30,14 +34,38 @@ export default function ChangePasswordForm() {
     if (changePasswordMutation.isPending) return;
     try {
       const result = changePasswordMutation.mutateAsync(values);
+      setAccessTokenFromLocalStorage((await result).payload.data.accessToken);
+      setRefreshTokenFromLocalStorage((await result).payload.data.refreshToken);
       toast({
         description: (await result).payload.message,
       });
-    } catch (error) {
-      handleErrorApi({
-        error,
-        setError: form.setError,
-      });
+      form.reset();
+    } catch (error: any) {
+      const errorData = error.response?.data;
+
+      if (errorData?.statusCode === 422 && Array.isArray(errorData.errors)) {
+        // Xử lý các lỗi validation
+        errorData.errors.forEach((err: { field: string; message: string }) => {
+          form.setError(err.field as keyof ChangePasswordBodyType, {
+            type: "manual",
+            message: err.message,
+          });
+        });
+
+        // Hiển thị toast thông báo lỗi
+        toast({
+          variant: "destructive",
+          description: errorData.message,
+        });
+      } else {
+        // Xử lý các lỗi khác
+        toast({
+          variant: "destructive",
+          description:
+            error?.response?.data?.message ||
+            "Mật khẩu cũ không khớp đổi mật khẩu",
+        });
+      }
     }
   };
 
