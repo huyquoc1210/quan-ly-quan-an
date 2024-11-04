@@ -18,9 +18,15 @@ import {
   setAccessTokenFromLocalStorage,
   setRefreshTokenFromLocalStorage,
 } from "@/lib/utils";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 export default function ChangePasswordForm() {
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const changePasswordMutation = useChangePasswordMutation();
+
   const form = useForm<ChangePasswordBodyType>({
     resolver: zodResolver(ChangePasswordBody),
     defaultValues: {
@@ -95,13 +101,28 @@ export default function ChangePasswordForm() {
                   <FormItem>
                     <div className="grid gap-3">
                       <Label htmlFor="oldPassword">Mật khẩu cũ</Label>
-                      <Input
-                        autoComplete="old-password"
-                        id="oldPassword"
-                        type="password"
-                        className="w-full"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          autoComplete="old-password"
+                          id="oldPassword"
+                          type={showOldPassword ? "text" : "password"}
+                          className="w-full pr-10"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowOldPassword(!showOldPassword)}
+                        >
+                          {showOldPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -114,13 +135,28 @@ export default function ChangePasswordForm() {
                   <FormItem>
                     <div className="grid gap-3">
                       <Label htmlFor="password">Mật khẩu mới</Label>
-                      <Input
-                        autoComplete="new-password"
-                        id="password"
-                        type="password"
-                        className="w-full"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          autoComplete="new-password"
+                          id="password"
+                          type={showNewPassword ? "text" : "password"}
+                          className="w-full pr-10"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                        >
+                          {showNewPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -135,13 +171,30 @@ export default function ChangePasswordForm() {
                       <Label htmlFor="confirmPassword">
                         Nhập lại mật khẩu mới
                       </Label>
-                      <Input
-                        autoComplete="new-password"
-                        id="confirmPassword"
-                        type="password"
-                        className="w-full"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          autoComplete="new-password"
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="w-full pr-10"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </div>
                   </FormItem>
