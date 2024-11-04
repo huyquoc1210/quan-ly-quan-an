@@ -1,6 +1,6 @@
 const QUERY_KEYS = {
   ACCOUNT: {
-    PROFILE: "account-profile",
+    PROFILE: "account-me",
   },
 } as const;
 

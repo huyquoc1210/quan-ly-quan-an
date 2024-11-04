@@ -13,46 +13,82 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAccountProfile } from "@/queries/useAccount";
+import { useAccountMe, useAccountMutation } from "@/queries/useAccount";
+import { handleErrorApi } from "@/lib/utils";
+import { useUploadMediaMutation } from "@/queries/useMedia";
+import { toast } from "@/hooks/use-toast";
 
 export default function UpdateProfileForm() {
   const [file, setFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const { data } = useAccountProfile();
+  const { data } = useAccountMe();
+  const updateMeMutation = useAccountMutation();
+  const uploadMediaMutation = useUploadMediaMutation();
 
   const form = useForm<UpdateMeBodyType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
       name: "",
-      avatar: "",
+      avatar: undefined,
     },
   });
 
   const avatar = form.watch("avatar");
   const name = form.watch("name");
 
-  const imageURL = useMemo(() => {
+  const previewAvatar = useMemo(() => {
     if (file) {
       return URL.createObjectURL(file);
     }
     return avatar;
   }, [avatar, file]);
 
+  const reset = () => {
+    form.reset();
+    setFile(null);
+  };
+
+  const onSubmit = async (values: UpdateMeBodyType) => {
+    if (updateMeMutation.isPending) return;
+    try {
+      let body = values;
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadImageResult = uploadMediaMutation.mutateAsync(formData);
+        const imageUrl = (await uploadImageResult).payload.data;
+        body = {
+          ...values,
+          avatar: imageUrl,
+        };
+        const result = await updateMeMutation.mutateAsync(body);
+        toast({
+          description: result.payload.message,
+        });
+      }
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      });
+    }
+  };
+
   useEffect(() => {
     // Cleanup function to revoke object URL
     return () => {
-      if (imageURL) {
-        URL.revokeObjectURL(imageURL);
+      if (previewAvatar && file) {
+        URL.revokeObjectURL(previewAvatar);
       }
     };
-  }, [imageURL]); // Cleanup khi imageURL thay đổi
+  }, [previewAvatar, file]); // Cleanup khi previewAvatar thay đổi
 
   useEffect(() => {
     if (data) {
       const { name, avatar } = data?.payload.data;
       form.reset({
         name,
-        avatar: avatar ?? "",
+        avatar: avatar ?? undefined,
       });
     }
   }, [data]);
@@ -62,6 +98,10 @@ export default function UpdateProfileForm() {
       <form
         noValidate
         className="grid auto-rows-max items-start gap-4 md:gap-8"
+        onReset={reset}
+        onSubmit={form.handleSubmit(onSubmit, (e) => {
+          console.log(e);
+        })}
       >
         <Card x-chunk="dashboard-07-chunk-0">
           <CardHeader>
@@ -77,7 +117,7 @@ export default function UpdateProfileForm() {
                   <FormItem>
                     <div className="flex gap-2 items-start justify-start">
                       <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
-                        <AvatarImage src={imageURL} />
+                        <AvatarImage src={previewAvatar} />
                         <AvatarFallback className="rounded-none">
                           {name}
                         </AvatarFallback>
@@ -91,6 +131,9 @@ export default function UpdateProfileForm() {
                           const file = e.target.files?.[0];
                           if (file) {
                             setFile(file);
+                            field.onChange(
+                              "http://localhost:3000/" + field.name
+                            );
                           }
                         }}
                       />
