@@ -134,6 +134,8 @@ const request = async <Response>(
           }
         }
       } else {
+        //Đây là trường hợp khi mà chúng ta vẫn còn accessToken (còn hạn)
+        // Và chúng ta gọi API ở NextJs Server(Router handle, Server component) đến Server Backend
         const accessToken = (options?.headers as any)?.Authorization.split(
           "Bearer "
         )[1];

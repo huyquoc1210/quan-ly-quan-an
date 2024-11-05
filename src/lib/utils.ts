@@ -45,11 +45,11 @@ const isBrowser = typeof window !== "undefined";
 export const getAccessTokenFromLocalStorage = () =>
   isBrowser ? localStorage.getItem("accessToken") : null;
 
-export const getRefreshTokenFromLocalStorage = () =>
+export const getRefreshTokenToLocalStorage = () =>
   isBrowser ? localStorage.getItem("refreshToken") : null;
 
 export const setRefreshTokenFromLocalStorage = (refreshToken: string) =>
   isBrowser ? localStorage.setItem("refreshToken", refreshToken) : null;
 
-export const setAccessTokenFromLocalStorage = (accessToken: string) =>
+export const setAccessTokenToLocalStorage = (accessToken: string) =>
   isBrowser ? localStorage.setItem("accessToken", accessToken) : null;
