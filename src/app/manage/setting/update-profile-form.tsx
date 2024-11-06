@@ -85,13 +85,13 @@ export default function UpdateProfileForm() {
 
   useEffect(() => {
     if (data) {
-      const { name, avatar } = data?.payload.data;
+      const { name, avatar } = data.payload.data;
       form.reset({
         name,
         avatar: avatar ?? undefined,
       });
     }
-  }, [data]);
+  }, [data, form]);
 
   return (
     <Form {...form}>

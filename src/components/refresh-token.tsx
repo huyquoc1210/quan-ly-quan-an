@@ -54,9 +54,9 @@ const RefreshToken = () => {
 
     const TIMEOUT = 1000;
     interval = setInterval(checkAndRefreshToken, TIMEOUT);
-    // return () => {
-    //   clearInterval(interval);
-    // };
+    return () => {
+      clearInterval(interval);
+    };
   }, [pathname]);
   return null;
 };

@@ -22,3 +22,11 @@ Lưu ý:
 
 - Không cho refreshToken liên tục
 - Thứ tự trong middleware
+
+lưu ý: để tránh bị bug khi thực hiện Đang dùng thì hết hạn
+
+- Không để refresh token bị gọi duplicate
+- Khi refresh token bị lỗi ở route handler ==> trả về 401 bất kể lỗi gì
+- Khi refresh token bị lỗi ở useEffect client ==> ngừng interval ngay
+- Đưa logic check vào layout ở trang authenticated: Không cho chạy refresh token ở những trang mà unauthenticated như login,logout
+- Kiểm tra login flow trong middleware

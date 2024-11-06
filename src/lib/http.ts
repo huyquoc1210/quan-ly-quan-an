@@ -115,7 +115,7 @@ const request = async <Response>(
     } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
       if (isClient) {
         if (!clientLogoutRequest) {
-          clientLogoutRequest = fetch("api/auth/logout", {
+          clientLogoutRequest = fetch("/api/auth/logout", {
             method: "POST",
             body: null, // Log cho phép luôn luôn thành công
             headers: {
@@ -130,7 +130,7 @@ const request = async <Response>(
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             clientLogoutRequest = null;
-            // location.href = "/login";
+            location.href = "/login";
           }
         }
       } else {
