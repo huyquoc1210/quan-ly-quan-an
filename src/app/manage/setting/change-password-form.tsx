@@ -1,25 +1,24 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
+import { toast } from "@/hooks/use-toast";
+import {
+  setAccessTokenToLocalStorage,
+  setRefreshTokenToLocalStorage,
+} from "@/lib/utils";
+import { useChangePasswordMutation } from "@/queries/useAccount";
 import {
   ChangePasswordBody,
   ChangePasswordBodyType,
 } from "@/schemaValidations/account.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { useChangePasswordMutation } from "@/queries/useAccount";
-import { toast } from "@/hooks/use-toast";
-import {
-  handleErrorApi,
-  setAccessTokenFromLocalStorage,
-  setRefreshTokenFromLocalStorage,
-} from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 export default function ChangePasswordForm() {
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -40,8 +39,8 @@ export default function ChangePasswordForm() {
     if (changePasswordMutation.isPending) return;
     try {
       const result = changePasswordMutation.mutateAsync(values);
-      setAccessTokenFromLocalStorage((await result).payload.data.accessToken);
-      setRefreshTokenFromLocalStorage((await result).payload.data.refreshToken);
+      setAccessTokenToLocalStorage((await result).payload.data.accessToken);
+      setRefreshTokenToLocalStorage((await result).payload.data.refreshToken);
       toast({
         description: (await result).payload.message,
       });

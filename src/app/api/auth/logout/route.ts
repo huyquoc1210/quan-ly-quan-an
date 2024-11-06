@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(request: Request) {
-  const cookiesStore = cookies();
-  const accessToken = (await cookiesStore).get("accessToken")?.value;
-  const refreshToken = (await cookiesStore).get("refreshToken")?.value;
-  (await cookiesStore).delete("accessToken");
-  (await cookiesStore).delete("refreshToken");
+  const cookiesStore = await cookies();
+  const accessToken = cookiesStore.get("accessToken")?.value;
+  const refreshToken = cookiesStore.get("refreshToken")?.value;
+  cookiesStore.delete("accessToken");
+  cookiesStore.delete("refreshToken");
 
   if (!accessToken || !refreshToken) {
     return Response.json(

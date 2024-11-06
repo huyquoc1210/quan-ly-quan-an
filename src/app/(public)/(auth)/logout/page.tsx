@@ -2,7 +2,7 @@
 
 import {
   getAccessTokenFromLocalStorage,
-  getRefreshTokenToLocalStorage,
+  getRefreshTokenFromToLocalStorage,
 } from "@/lib/utils";
 import { useLogoutMutation } from "@/queries/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,7 +23,7 @@ const LogoutPage = () => {
       !refreshTokenFromUrl ||
       !accessTokenFromUrl ||
       (refreshTokenFromUrl &&
-        refreshTokenFromUrl !== getRefreshTokenToLocalStorage()) ||
+        refreshTokenFromUrl !== getRefreshTokenFromToLocalStorage()) ||
       (accessTokenFromUrl &&
         accessTokenFromUrl !== getAccessTokenFromLocalStorage())
     ) {

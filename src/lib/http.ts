@@ -130,7 +130,7 @@ const request = async <Response>(
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             clientLogoutRequest = null;
-            location.href = "/login";
+            // location.href = "/login";
           }
         }
       } else {
