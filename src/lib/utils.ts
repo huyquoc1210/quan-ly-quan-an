@@ -3,6 +3,13 @@ import { EntityError } from "@/lib/http";
 import { clsx, type ClassValue } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
+import jwt from "jsonwebtoken";
+import authApiRequest from "@/apiRequest/auth";
+
+interface JWTPayloadProps {
+  exp: number;
+  iat: number;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -45,11 +52,44 @@ const isBrowser = typeof window !== "undefined";
 export const getAccessTokenFromLocalStorage = () =>
   isBrowser ? localStorage.getItem("accessToken") : null;
 
-export const getRefreshTokenFromToLocalStorage = () =>
+export const getRefreshTokenFromLocalStorage = () =>
   isBrowser ? localStorage.getItem("refreshToken") : null;
 
 export const setRefreshTokenToLocalStorage = (value: string) =>
-  isBrowser ?? localStorage.setItem("refreshToken", value);
+  isBrowser && localStorage.setItem("refreshToken", value);
 
 export const setAccessTokenToLocalStorage = (value: string) =>
-  isBrowser ?? localStorage.setItem("accessToken", value);
+  isBrowser && localStorage.setItem("accessToken", value);
+
+export const checkAndRefreshToken = async (params?: {
+  onSuccess?: () => void;
+  onError?: () => void;
+}) => {
+  const accessToken = getAccessTokenFromLocalStorage();
+  const refreshToken = getRefreshTokenFromLocalStorage();
+
+  if (!accessToken || !refreshToken) return;
+  const decodeAccessToken = jwt.decode(accessToken) as JWTPayloadProps;
+  const decodeRefreshToken = jwt.decode(refreshToken) as JWTPayloadProps;
+
+  const now = Math.round(new Date().getTime() / 1000);
+  if (decodeRefreshToken.exp <= now) return;
+
+  if (
+    decodeAccessToken.exp - now <
+    (decodeAccessToken.exp - decodeAccessToken.iat) / 3
+  ) {
+    try {
+      const result = await authApiRequest.refreshToken();
+      setAccessTokenToLocalStorage(result.payload.data.accessToken);
+      setRefreshTokenToLocalStorage(result.payload.data.refreshToken);
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      params?.onSuccess && params.onSuccess();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      params?.onError && params.onError();
+    }
+  }
+};
