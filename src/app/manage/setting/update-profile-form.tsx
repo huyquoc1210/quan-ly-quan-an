@@ -13,18 +13,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAccountMe, useAccountMutation } from "@/queries/useAccount";
-import { handleErrorApi } from "@/lib/utils";
+import { useAccountMe, useUpdateMeMutation } from "@/queries/useAccount";
 import { useUploadMediaMutation } from "@/queries/useMedia";
+
+import { handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 export default function UpdateProfileForm() {
   const [file, setFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const { data } = useAccountMe();
-  const updateMeMutation = useAccountMutation();
+  const { data, refetch } = useAccountMe();
+  const updateMeMutation = useUpdateMeMutation();
   const uploadMediaMutation = useUploadMediaMutation();
-
   const form = useForm<UpdateMeBodyType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
@@ -35,7 +35,17 @@ export default function UpdateProfileForm() {
 
   const avatar = form.watch("avatar");
   const name = form.watch("name");
-
+  useEffect(() => {
+    if (data) {
+      const { name, avatar } = data.payload.data;
+      form.reset({
+        name,
+        avatar: avatar ?? undefined,
+      });
+    }
+  }, [form, data]);
+  // Nếu các bạn dùng Next.js 15 (tức React 19) thì không cần dùng useMemo chỗ này
+  // const previewAvatar = file ? URL.createObjectURL(file) : avatar
   const previewAvatar = useMemo(() => {
     if (file) {
       return URL.createObjectURL(file);
@@ -55,17 +65,20 @@ export default function UpdateProfileForm() {
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-        const uploadImageResult = uploadMediaMutation.mutateAsync(formData);
-        const imageUrl = (await uploadImageResult).payload.data;
+        const uploadImageResult = await uploadMediaMutation.mutateAsync(
+          formData
+        );
+        const imageUrl = uploadImageResult.payload.data;
         body = {
           ...values,
           avatar: imageUrl,
         };
-        const result = await updateMeMutation.mutateAsync(body);
-        toast({
-          description: result.payload.message,
-        });
       }
+      const result = await updateMeMutation.mutateAsync(body);
+      toast({
+        description: result.payload.message,
+      });
+      refetch();
     } catch (error) {
       handleErrorApi({
         error,
@@ -73,25 +86,6 @@ export default function UpdateProfileForm() {
       });
     }
   };
-
-  useEffect(() => {
-    // Cleanup function to revoke object URL
-    return () => {
-      if (previewAvatar && file) {
-        URL.revokeObjectURL(previewAvatar);
-      }
-    };
-  }, [previewAvatar, file]); // Cleanup khi previewAvatar thay đổi
-
-  useEffect(() => {
-    if (data) {
-      const { name, avatar } = data.payload.data;
-      form.reset({
-        name,
-        avatar: avatar ?? undefined,
-      });
-    }
-  }, [data, form]);
 
   return (
     <Form {...form}>
@@ -112,7 +106,6 @@ export default function UpdateProfileForm() {
               <FormField
                 control={form.control}
                 name="avatar"
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex gap-2 items-start justify-start">

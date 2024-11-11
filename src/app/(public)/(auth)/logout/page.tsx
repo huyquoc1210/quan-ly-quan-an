@@ -7,9 +7,9 @@ import {
 } from "@/lib/utils";
 import { useLogoutMutation } from "@/queries/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 
-const LogoutPage = () => {
+const Logout = () => {
   // Không dùng logoutMutation vì nó là 1 object khi đưa vào useEffect khi dependency sẽ thay đổi vì sinh ra tham chiếu mới
   const { mutateAsync } = useLogoutMutation();
   const router = useRouter();
@@ -43,6 +43,12 @@ const LogoutPage = () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl, setIsAuth]);
   return <div>LogoutPage</div>;
+};
+
+const LogoutPage = () => {
+  <Suspense>
+    <Logout />
+  </Suspense>;
 };
 
 export default LogoutPage;
