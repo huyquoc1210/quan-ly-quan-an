@@ -66,8 +66,8 @@ export default function EditEmployee({
   }, [file, avatar]);
 
   const reset = () => {
-    form.reset();
     setId(undefined);
+    setFile(null);
   };
 
   const onSubmit = async (values: UpdateEmployeeAccountBodyType) => {
@@ -93,7 +93,7 @@ export default function EditEmployee({
       toast({
         description: result.payload.message,
       });
-      reset();
+      setId(undefined);
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       onSubmitSuccess && onSubmitSuccess();
     } catch (error) {
@@ -123,7 +123,7 @@ export default function EditEmployee({
       open={Boolean(id)}
       onOpenChange={(value) => {
         if (!value) {
-          setId(undefined);
+          reset();
         }
       }}
     >
