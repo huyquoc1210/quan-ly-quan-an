@@ -1,8 +1,5 @@
 import tableApiRequest from "@/apiRequest/table";
-import {
-  TableParamsType,
-  UpdateTableBodyType,
-} from "@/schemaValidations/table.schema";
+import { UpdateTableBodyType } from "@/schemaValidations/table.schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useGetTableList = () => {
@@ -41,8 +38,8 @@ export const useUpdateTableMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ number, ...body }: UpdateTableBodyType & TableParamsType) =>
-      tableApiRequest.updateTable(number, body),
+    mutationFn: ({ id, ...body }: UpdateTableBodyType & { id: number }) =>
+      tableApiRequest.updateTable(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tables"], exact: true });
     },
