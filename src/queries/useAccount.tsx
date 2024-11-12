@@ -32,10 +32,14 @@ export const useGetAccountList = () => {
   });
 };
 
-export const useGetAccount = ({ id }: AccountIdParamType) => {
+export const useGetAccount = ({
+  id,
+  enabled,
+}: AccountIdParamType & { enabled: boolean }) => {
   return useQuery({
     queryKey: ["accounts", id],
     queryFn: () => accountApiRequest.getEmployee(id),
+    enabled,
   });
 };
 
@@ -68,7 +72,7 @@ export const useUpdateAccountMutation = () => {
     }: UpdateEmployeeAccountBodyType & AccountIdParamType) =>
       accountApiRequest.updateEmployee(id, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"], exact: true });
     },
   });
 };

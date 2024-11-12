@@ -1,4 +1,5 @@
 "use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,19 +9,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "@/hooks/use-toast";
+import { handleErrorApi } from "@/lib/utils";
+import { useGetAccount, useUpdateAccountMutation } from "@/queries/useAccount";
+import { useUploadMediaMutation } from "@/queries/useMedia";
 import {
+  AccountIdParamType,
   UpdateEmployeeAccountBody,
   UpdateEmployeeAccountBodyType,
 } from "@/schemaValidations/account.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
 
 export default function EditEmployee({
   id,
@@ -34,6 +39,9 @@ export default function EditEmployee({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const { data } = useGetAccount({ id: id as number, enabled: Boolean(id) });
+  const updateAccountMutation = useUpdateAccountMutation();
+  const uploadMediaMutation = useUploadMediaMutation();
   const form = useForm<UpdateEmployeeAccountBodyType>({
     resolver: zodResolver(UpdateEmployeeAccountBody),
     defaultValues: {
@@ -45,15 +53,70 @@ export default function EditEmployee({
       changePassword: false,
     },
   });
+
   const avatar = form.watch("avatar");
   const name = form.watch("name");
   const changePassword = form.watch("changePassword");
+
   const previewAvatarFromFile = useMemo(() => {
     if (file) {
       return URL.createObjectURL(file);
     }
     return avatar;
   }, [file, avatar]);
+
+  const reset = () => {
+    form.reset();
+    setId(undefined);
+  };
+
+  const onSubmit = async (values: UpdateEmployeeAccountBodyType) => {
+    if (updateAccountMutation.isPending) return;
+    try {
+      let body: UpdateEmployeeAccountBodyType & AccountIdParamType = {
+        id: id as number,
+        ...values,
+      };
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadImageResult = await uploadMediaMutation.mutateAsync(
+          formData
+        );
+        const imageUrl = uploadImageResult.payload.data;
+        body = {
+          ...body,
+          avatar: imageUrl,
+        };
+      }
+      const result = await updateAccountMutation.mutateAsync(body);
+      toast({
+        description: result.payload.message,
+      });
+      reset();
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      onSubmitSuccess && onSubmitSuccess();
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (data) {
+      const { name, avatar, email } = data.payload.data;
+      form.reset({
+        name,
+        email,
+        avatar: avatar ?? undefined,
+        password: form.getValues("password"),
+        confirmPassword: form.getValues("confirmPassword"),
+        changePassword: form.getValues("changePassword"),
+      });
+    }
+  }, [data, form]);
 
   return (
     <Dialog
@@ -76,6 +139,7 @@ export default function EditEmployee({
             noValidate
             className="grid auto-rows-max items-start gap-4 md:gap-8"
             id="edit-employee-form"
+            onSubmit={form.handleSubmit(onSubmit, (e) => console.log(e))}
           >
             <div className="grid gap-4 py-4">
               <FormField
