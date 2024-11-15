@@ -22,7 +22,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 export default function LoginForm() {
-  const { setIsAuth } = useAppContext();
+  const { setRole } = useAppContext();
   const loginMutate = useLoginMutation();
   const searchParams = useSearchParams();
   const clearToken = searchParams.get("clearTokens");
@@ -37,16 +37,16 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (clearToken) {
-      setIsAuth(false);
+      setRole();
     }
-  }, [clearToken, setIsAuth]);
+  }, [clearToken, setRole]);
 
   const onSubmit = async (data: LoginBodyType) => {
     if (loginMutate.isPending) return;
 
     try {
       const result = await loginMutate.mutateAsync(data);
-      setIsAuth(true);
+      setRole(result.payload.data.account.role);
       router.push("/manage/dashboard");
       toast({
         description: result.payload.message,

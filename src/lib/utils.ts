@@ -7,11 +7,7 @@ import jwt from "jsonwebtoken";
 import authApiRequest from "@/apiRequest/auth";
 import { DishStatus, OrderStatus, TableStatus } from "@/constants/type";
 import envConfig from "@/config";
-
-interface JWTPayloadProps {
-  exp: number;
-  iat: number;
-}
+import { TokenPayload } from "@/types/jwt.types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -78,8 +74,8 @@ export const checkAndRefreshToken = async (params?: {
   const refreshToken = getRefreshTokenFromLocalStorage();
 
   if (!accessToken || !refreshToken) return;
-  const decodeAccessToken = jwt.decode(accessToken) as JWTPayloadProps;
-  const decodeRefreshToken = jwt.decode(refreshToken) as JWTPayloadProps;
+  const decodeAccessToken = decodeToken(accessToken);
+  const decodeRefreshToken = decodeToken(refreshToken);
 
   const now = new Date().getTime() / 1000 - 1;
   if (decodeRefreshToken.exp <= now) {
@@ -166,4 +162,8 @@ export const getTableLink = ({
   return (
     envConfig.NEXT_PUBLIC_URL + "/tables/" + tableNumber + "?token=" + token
   );
+};
+
+export const decodeToken = (token: string) => {
+  return jwt.decode(token) as TokenPayload;
 };

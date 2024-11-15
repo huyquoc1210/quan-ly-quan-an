@@ -2,9 +2,11 @@
 
 import RefreshToken from "@/components/refresh-token";
 import {
+  decodeToken,
   getAccessTokenFromLocalStorage,
   removeTokensFromLocalStorage,
 } from "@/lib/utils";
+import { RoleType } from "@/types/jwt.types";
 import { FCC } from "@/types/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -12,7 +14,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 interface Props {
   isAuth: boolean;
-  setIsAuth: (isAuth: boolean) => void;
+  role: RoleType | undefined;
+  setRole: (role?: RoleType | undefined) => void;
 }
 
 // Create a client
@@ -27,7 +30,8 @@ const queryClient = new QueryClient({
 
 const AppContext = createContext<Props>({
   isAuth: false,
-  setIsAuth: () => {},
+  role: undefined,
+  setRole: () => {},
 });
 
 export const useAppContext = () => {
@@ -36,26 +40,27 @@ export const useAppContext = () => {
 
 const AppProvider: FCC = (props) => {
   const { children } = props;
-  const [isAuth, setIsAuthState] = useState(false);
+  const [role, setRoleState] = useState<RoleType | undefined>(undefined);
 
   useEffect(() => {
     const accessToken = getAccessTokenFromLocalStorage();
     if (accessToken) {
-      setIsAuthState(true);
+      const role = decodeToken(accessToken).role;
+      setRoleState(role);
     }
   }, []);
 
-  const setIsAuth = (isAuth: boolean) => {
-    if (isAuth) {
-      setIsAuthState(true);
-    } else {
-      setIsAuthState(false);
+  const setRole = (role?: RoleType | undefined) => {
+    setRoleState(role);
+    if (!role) {
       removeTokensFromLocalStorage();
     }
   };
 
+  const isAuth = Boolean(role);
+
   return (
-    <AppContext.Provider value={{ isAuth, setIsAuth }}>
+    <AppContext.Provider value={{ isAuth, role, setRole }}>
       <QueryClientProvider client={queryClient}>
         {children}
         <RefreshToken />

@@ -15,7 +15,9 @@ export async function POST(request: Request) {
 
   try {
     const { payload } = await guestApiRequest.sLogin(body);
+
     const { accessToken, refreshToken } = payload.data;
+    console.log(accessToken, refreshToken);
     const decodeAccessToken = jwt.decode(accessToken) as ExpProps;
     const decodeRefreshToken = jwt.decode(refreshToken) as ExpProps;
     cookieStore.set("accessToken", accessToken, {
