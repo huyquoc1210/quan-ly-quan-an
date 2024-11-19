@@ -6,6 +6,9 @@ import {
 } from "@/schemaValidations/auth.schema";
 import { MessageResType } from "@/schemaValidations/common.schema";
 import {
+  GuestCreateOrdersBodyType,
+  GuestCreateOrdersResType,
+  GuestGetOrdersResType,
   GuestLoginBodyType,
   GuestLoginResType,
 } from "@/schemaValidations/guest.schema";
@@ -52,6 +55,9 @@ const guestApiRequest = {
     this.refreshTokenRequest = null;
     return result;
   },
+  order: () => http.get<GuestGetOrdersResType>("/guest/orders"),
+  addOrder: (body: GuestCreateOrdersBodyType) =>
+    http.post<GuestCreateOrdersResType>("/guest/orders", body),
 };
 
 export default guestApiRequest;
