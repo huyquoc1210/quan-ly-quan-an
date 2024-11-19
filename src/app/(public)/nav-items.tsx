@@ -19,8 +19,13 @@ const menuItems: {
     href: "/", // hideWhenLogin = undefined nghĩa là đăng nhập hay chưa đều cho hiển thị
   },
   {
-    title: "Menu",
+    title: "Thực đơn",
     href: "/guest/menu",
+    role: [Role.Guest],
+  },
+  {
+    title: "Đơn hàng",
+    href: "/guest/orders",
     role: [Role.Guest],
   },
   {

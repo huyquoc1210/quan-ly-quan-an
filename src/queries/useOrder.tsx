@@ -32,7 +32,7 @@ export const useAddOrderMutation = () => {
   });
 };
 
-export const useUpdateDishMutation = () => {
+export const useUpdateOrderMutation = () => {
   return useMutation({
     mutationFn: ({ orderId, ...body }: UpdateOrderBodyType & OrderParamType) =>
       orderApiRequest.updateOrder(orderId, body),
