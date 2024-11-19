@@ -1,8 +1,12 @@
+import { Role } from "@/constants/type";
+import { decodeToken } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 // import jwt from "jsonwebtoken";
 
-const privatePaths = ["/manage"];
+const managePaths = ["/manage"];
+const guestPaths = ["/manage"];
+const privatePaths = [...managePaths, ...guestPaths];
 const unAuthPaths = ["/login"];
 
 // interface JWTPayload {
@@ -23,49 +27,42 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Đăng nhập rồi thì sẽ cho vào login nữa
-  if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken)
-    return NextResponse.redirect(new URL("/", request.url));
+  if (refreshToken) {
+    // Đăng nhập rồi thì sẽ cho vào login nữa
+    if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken)
+      return NextResponse.redirect(new URL("/", request.url));
 
-  // Đăng nhập rồi nhưng accessToken hết hạn
-  if (
-    privatePaths.some((path) => pathname.startsWith(path)) &&
-    !accessToken &&
-    refreshToken
-  ) {
-    const url = new URL("/refresh-token", request.url);
-    url.searchParams.set("refreshToken", refreshToken);
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+    // Đăng nhập rồi nhưng accessToken hết hạn
+    if (
+      privatePaths.some((path) => pathname.startsWith(path)) &&
+      !accessToken
+    ) {
+      const url = new URL("/refresh-token", request.url);
+      url.searchParams.set("refreshToken", refreshToken);
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
 
-    // Kiểm tra thời gian còn lại của access token
-    //   try {
-    //     const decoded = jwt.decode(accessToken) as JWTPayload;
-    //     const now = Math.floor(Date.now() / 1000);
+    // Vào không đúng role sẽ redirect về trang chủ
+    const role = decodeToken(refreshToken).role;
+    // Guest nhưng cố tình vào route của owner
+    const isGuestGoToManagePaths =
+      role === Role.Guest &&
+      managePaths.some((path) => pathname.startsWith(path));
+    // Không phải Guest nhưng vào route của guest
+    const isNotGuestGoToGuestPaths =
+      role === Role.Guest &&
+      guestPaths.some((path) => pathname.startsWith(path));
 
-    //     // Nếu token đã hết hạn hoặc sắp hết hạn (ví dụ còn 5 giây)
-    //     const THRESHOLD_SECONDS = 5;
-    //     if (decoded.exp <= now || decoded.exp - now <= THRESHOLD_SECONDS) {
-    //       const url = new URL("/logout", request.url);
-    //       url.searchParams.set("refreshToken", refreshToken);
-    //       if (accessToken) url.searchParams.set("accessToken", accessToken);
-    //       return NextResponse.redirect(url);
-    //     }
-    //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //   } catch (error) {
-    //     // Nếu có lỗi khi decode token, cho về trang logout
-    //     const url = new URL("/logout", request.url);
-    //     url.searchParams.set("refreshToken", refreshToken);
-    //     return NextResponse.redirect(url);
-    //   }
+    if (isGuestGoToManagePaths || isNotGuestGoToGuestPaths) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
-
-  // Kiểm tra thời gian còn lại của access token
 
   return NextResponse.next();
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/manage/:path*", "/login"],
+  matcher: ["/manage/:path*", "/guest/:path*", "/login"],
 };

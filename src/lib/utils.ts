@@ -5,9 +5,10 @@ import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import jwt from "jsonwebtoken";
 import authApiRequest from "@/apiRequest/auth";
-import { DishStatus, OrderStatus, TableStatus } from "@/constants/type";
+import { DishStatus, OrderStatus, Role, TableStatus } from "@/constants/type";
 import envConfig from "@/config";
 import { TokenPayload } from "@/types/jwt.types";
+import guestApiRequest from "@/apiRequest/guest";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -88,7 +89,11 @@ export const checkAndRefreshToken = async (params?: {
     (decodeAccessToken.exp - decodeAccessToken.iat) / 3
   ) {
     try {
-      const result = await authApiRequest.refreshToken();
+      const role = decodeRefreshToken.role;
+      const result =
+        role === Role.Guest
+          ? await guestApiRequest.refreshToken()
+          : await authApiRequest.refreshToken();
       setAccessTokenToLocalStorage(result.payload.data.accessToken);
       setRefreshTokenToLocalStorage(result.payload.data.refreshToken);
 
