@@ -1,4 +1,3 @@
-import MenuOrder from "@/app/guest/menu/menu-order";
 import OrdersCart from "@/app/guest/orders/orders-cart";
 
 export default async function OrderPage() {

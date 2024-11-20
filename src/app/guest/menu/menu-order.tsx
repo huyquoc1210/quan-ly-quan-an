@@ -7,7 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { cn, formatCurrency, handleErrorApi } from "@/lib/utils";
 import { useGetDishList } from "@/queries/useDish";
 import { useGuestOrderMutation } from "@/queries/useGuest";
-import { useUpdateOrderMutation } from "@/queries/useOrder";
 import { GuestCreateOrdersBodyType } from "@/schemaValidations/guest.schema";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
