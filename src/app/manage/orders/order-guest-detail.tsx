@@ -1,14 +1,20 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { OrderStatus } from "@/constants/type";
+import { toast } from "@/hooks/use-toast";
 import {
   OrderStatusIcon,
   formatCurrency,
   formatDateTimeToLocaleString,
   formatDateTimeToTimeString,
   getVietnameseOrderStatus,
+  handleErrorApi,
 } from "@/lib/utils";
-import { GetOrdersResType } from "@/schemaValidations/order.schema";
+import { usePayForGuestMutation } from "@/queries/useOrder";
+import {
+  GetOrdersResType,
+  PayGuestOrdersResType,
+} from "@/schemaValidations/order.schema";
 import Image from "next/image";
 import { Fragment } from "react";
 
@@ -17,10 +23,13 @@ type Orders = GetOrdersResType["data"];
 export default function OrderGuestDetail({
   guest,
   orders,
+  onPaySuccess,
 }: {
   guest: Guest;
   orders: Orders;
+  onPaySuccess?: (data: PayGuestOrdersResType) => void;
 }) {
+  const payForGuestMutation = usePayForGuestMutation();
   const ordersFilterToPurchase = guest
     ? orders.filter(
         (order) =>
@@ -31,6 +40,25 @@ export default function OrderGuestDetail({
   const purchasedOrderFilter = guest
     ? orders.filter((order) => order.status === OrderStatus.Paid)
     : [];
+
+  const handlePay = async () => {
+    if (payForGuestMutation.isPending || !guest) return;
+    try {
+      const result = await payForGuestMutation.mutateAsync({
+        guestId: guest.id,
+      });
+      toast({
+        description: result.payload.message,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      onPaySuccess && onPaySuccess(result.payload);
+    } catch (error) {
+      handleErrorApi({
+        error,
+      });
+    }
+  };
   return (
     <div className="space-y-2 text-sm">
       {guest && (
@@ -147,6 +175,7 @@ export default function OrderGuestDetail({
           size={"sm"}
           variant={"secondary"}
           disabled={ordersFilterToPurchase.length === 0}
+          onClick={handlePay}
         >
           Thanh toán tất cả ({ordersFilterToPurchase.length} đơn)
         </Button>

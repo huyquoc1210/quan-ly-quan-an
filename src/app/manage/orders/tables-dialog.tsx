@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { TableStatus } from "@/constants/type";
 import { cn, getVietnameseTableStatus, simpleMatchText } from "@/lib/utils";
+import { useGetTableList } from "@/queries/useTable";
 import { TableListResType } from "@/schemaValidations/table.schema";
 import {
   ColumnDef,
@@ -71,7 +72,8 @@ export function TablesDialog({
   onChoose: (table: TableItem) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const data: TableListResType["data"] = [];
+  const tableListQuery = useGetTableList();
+  const data = tableListQuery.data?.payload.data ?? [];
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -114,6 +116,8 @@ export function TablesDialog({
     onChoose(table);
     setOpen(false);
   };
+
+  console.log(onChoose);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

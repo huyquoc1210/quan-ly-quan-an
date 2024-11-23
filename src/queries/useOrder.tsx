@@ -39,3 +39,15 @@ export const useUpdateOrderMutation = () => {
       orderApiRequest.updateOrder(orderId, body),
   });
 };
+
+export const usePayForGuestMutation = () => {
+  return useMutation({
+    mutationFn: orderApiRequest.pay,
+  });
+};
+
+export const useCreateOrdersMutation = () => {
+  return useMutation({
+    mutationFn: orderApiRequest.createOrder,
+  });
+};

@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTimeToLocaleString, simpleMatchText } from "@/lib/utils";
+import { useGuestListQuery } from "@/queries/useAccount";
 import { GetListGuestsResType } from "@/schemaValidations/account.schema";
 import {
   ColumnDef,
@@ -89,7 +90,12 @@ export default function GuestsDialog({
   const [open, setOpen] = useState(false);
   const [fromDate, setFromDate] = useState(initFromDate);
   const [toDate, setToDate] = useState(initToDate);
-  const data: GetListGuestsResType["data"] = [];
+  const guestListQuery = useGuestListQuery({
+    fromDate,
+    toDate,
+  });
+
+  const data = guestListQuery.data?.payload.data ?? [];
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});

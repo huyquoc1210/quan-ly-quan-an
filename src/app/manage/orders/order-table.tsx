@@ -15,10 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { OrderStatusValues } from "@/constants/type";
+import socket from "@/lib/socket";
 import { getVietnameseOrderStatus, handleErrorApi } from "@/lib/utils";
 import {
   CreateOrdersResType,
   GetOrdersResType,
+  PayGuestOrdersResType,
   UpdateOrderResType,
 } from "@/schemaValidations/order.schema";
 import {
@@ -35,7 +37,6 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { createContext, useEffect, useState } from "react";
-import socket from "@/lib/socket";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,11 +52,11 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-import { endOfDay, format, startOfDay } from "date-fns";
-import { useGetOrderList, useUpdateOrderMutation } from "@/queries/useOrder";
-import { useGetTableList } from "@/queries/useTable";
 import TableSkeleton from "@/app/manage/orders/table-skeleton";
 import { toast } from "@/hooks/use-toast";
+import { useGetOrderList, useUpdateOrderMutation } from "@/queries/useOrder";
+import { useGetTableList } from "@/queries/useTable";
+import { endOfDay, format, startOfDay } from "date-fns";
 
 export const OrderTableContext = createContext({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -195,7 +196,15 @@ export default function OrderTable() {
     const onNewOrder = (data: CreateOrdersResType["data"]) => {
       const { guest } = data[0];
       toast({
-        description: `${guest?.name} tại bàn ${guest?.tableNumber}) vừa đặt "${data.length}"`,
+        description: `${guest?.name} tại bàn ${guest?.tableNumber} vừa đặt ${data.length} đơn`,
+      });
+      refetch();
+    };
+
+    const onPayment = (data: PayGuestOrdersResType["data"]) => {
+      const { guest } = data[0];
+      toast({
+        description: `${guest?.name} tại bàn ${guest?.tableNumber} thanh toán thành công ${data.length} đơn`,
       });
       refetch();
     };
@@ -207,12 +216,14 @@ export default function OrderTable() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("new-order", onNewOrder);
+    socket.on("payment", onPayment);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("update-order", onUpdateOrder);
       socket.off("new-order", onNewOrder);
+      socket.off("payment", onPayment);
     };
   }, [refetchOrderList, toDate, fromDate]);
 
