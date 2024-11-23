@@ -15,8 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { OrderStatusValues } from "@/constants/type";
-import { getVietnameseOrderStatus } from "@/lib/utils";
-import { GetOrdersResType } from "@/schemaValidations/order.schema";
+import { getVietnameseOrderStatus, handleErrorApi } from "@/lib/utils";
+import {
+  CreateOrdersResType,
+  GetOrdersResType,
+  UpdateOrderResType,
+} from "@/schemaValidations/order.schema";
 import {
   ColumnFiltersState,
   SortingState,
@@ -31,6 +35,7 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { createContext, useEffect, useState } from "react";
+import socket from "@/lib/socket";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,13 +52,16 @@ import {
 import { cn } from "@/lib/utils";
 
 import { endOfDay, format, startOfDay } from "date-fns";
-import { useGetOrderList } from "@/queries/useOrder";
+import { useGetOrderList, useUpdateOrderMutation } from "@/queries/useOrder";
 import { useGetTableList } from "@/queries/useTable";
 import TableSkeleton from "@/app/manage/orders/table-skeleton";
+import { toast } from "@/hooks/use-toast";
 
 export const OrderTableContext = createContext({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setOrderIdEdit: (value: number | undefined) => {},
   orderIdEdit: undefined as number | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   changeStatus: (payload: {
     orderId: number;
     dishId: number;
@@ -86,7 +94,9 @@ export default function OrderTable() {
   const pageIndex = page - 1;
   const [orderIdEdit, setOrderIdEdit] = useState<number | undefined>();
   const orderListQuery = useGetOrderList({ fromDate, toDate });
+  const refetchOrderList = orderListQuery.refetch;
   const tableListQuery = useGetTableList();
+  const { mutateAsync } = useUpdateOrderMutation();
   const orderList = orderListQuery.data?.payload.data ?? [];
   const tableList = tableListQuery.data?.payload.data ?? [];
   const tableListSortedByNumber = tableList.sort((a, b) => a.number - b.number);
@@ -102,12 +112,22 @@ export default function OrderTable() {
   const { statics, orderObjectByGuestId, servingGuestByTableNumber } =
     useOrderService(orderList);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const changeStatus = async (body: {
     orderId: number;
     dishId: number;
     status: (typeof OrderStatusValues)[number];
     quantity: number;
-  }) => {};
+  }) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const result = await mutateAsync(body);
+    } catch (error) {
+      handleErrorApi({
+        error,
+      });
+    }
+  };
 
   const table = useReactTable({
     data: orderList,
@@ -142,6 +162,59 @@ export default function OrderTable() {
     setFromDate(initFromDate);
     setToDate(initToDate);
   };
+
+  useEffect(() => {
+    const onConnect = () => {
+      console.log(socket.id);
+    };
+
+    const onDisconnect = () => {
+      console.log("disconnect");
+    };
+
+    const refetch = () => {
+      const now = new Date();
+      if (now >= fromDate && now <= toDate) {
+        refetchOrderList();
+      }
+    };
+
+    const onUpdateOrder = (data: UpdateOrderResType["data"]) => {
+      const {
+        dishSnapshot: { name },
+        quantity,
+      } = data;
+      toast({
+        description: `Món ${name} (SL: ${quantity}) vừa được cập nhật sang trạng thái "${getVietnameseOrderStatus(
+          data.status
+        )}"`,
+      });
+      refetch();
+    };
+
+    const onNewOrder = (data: CreateOrdersResType["data"]) => {
+      const { guest } = data[0];
+      toast({
+        description: `${guest?.name} tại bàn ${guest?.tableNumber}) vừa đặt "${data.length}"`,
+      });
+      refetch();
+    };
+
+    if (socket.connected) {
+      onConnect();
+    }
+    socket.on("update-order", onUpdateOrder);
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("new-order", onNewOrder);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("update-order", onUpdateOrder);
+      socket.off("new-order", onNewOrder);
+    };
+  }, [refetchOrderList, toDate, fromDate]);
 
   return (
     <OrderTableContext.Provider

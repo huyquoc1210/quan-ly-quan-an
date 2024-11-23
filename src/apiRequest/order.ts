@@ -8,7 +8,6 @@ import {
   UpdateOrderBodyType,
   UpdateOrderResType,
 } from "@/schemaValidations/order.schema";
-import { toDate } from "date-fns";
 import queryString from "query-string";
 
 const prefix = "/orders";

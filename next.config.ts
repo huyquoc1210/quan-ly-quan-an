@@ -6,9 +6,13 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        port: "4000",
         pathname: "/**",
       },
+      // {
+      //   protocol: "http",
+      //   hostname: "61.14.233.59",
+      //   pathname: "/**",
+      // },
       {
         hostname: "via.placeholder.com",
         pathname: "/**",
