@@ -78,7 +78,7 @@ export const columns: ColumnDef<GuestItem>[] = [
   },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 3;
 const initFromDate = startOfDay(new Date());
 const initToDate = endOfDay(new Date());
 
@@ -275,7 +275,13 @@ export default function GuestsDialog({
                 <AutoPagination
                   page={table.getState().pagination.pageIndex + 1}
                   pageSize={table.getPageCount()}
-                  pathname="/manage/Guests"
+                  isLink={false}
+                  onClick={(pageNumber) =>
+                    table.setPagination({
+                      pageIndex: pageNumber - 1,
+                      pageSize: PAGE_SIZE,
+                    })
+                  }
                 />
               </div>
             </div>
