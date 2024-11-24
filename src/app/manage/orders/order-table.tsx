@@ -52,7 +52,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import TableSkeleton from "@/app/manage/orders/table-skeleton";
-import { useAppContext } from "@/components/app-provider";
+import { useAppStore } from "@/components/app-provider";
 import { toast } from "@/hooks/use-toast";
 import { useGetOrderList, useUpdateOrderMutation } from "@/queries/useOrder";
 import { useGetTableList } from "@/queries/useTable";
@@ -88,7 +88,7 @@ const initFromDate = startOfDay(new Date());
 const initToDate = endOfDay(new Date());
 export default function OrderTable() {
   const searchParam = useSearchParams();
-  const { socket } = useAppContext();
+  const socket = useAppStore((state) => state.socket);
   const [openStatusFilter, setOpenStatusFilter] = useState(false);
   const [fromDate, setFromDate] = useState(initFromDate);
   const [toDate, setToDate] = useState(initToDate);
