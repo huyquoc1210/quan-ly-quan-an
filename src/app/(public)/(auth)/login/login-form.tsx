@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import envConfig from "@/config";
 import { toast } from "@/hooks/use-toast";
-import { handleErrorApi } from "@/lib/utils";
+import { generateSocketInstance, handleErrorApi } from "@/lib/utils";
 import { useLoginMutation } from "@/queries/useAuth";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +42,7 @@ const getOauthGoogleUrl = () => {
 const googleOauthUrl = getOauthGoogleUrl();
 
 export default function LoginForm() {
-  const { setRole } = useAppContext();
+  const { setRole, setSocket } = useAppContext();
   const loginMutate = useLoginMutation();
   const searchParams = useSearchParams();
   const clearToken = searchParams.get("clearTokens");
@@ -67,6 +67,7 @@ export default function LoginForm() {
     try {
       const result = await loginMutate.mutateAsync(data);
       setRole(result.payload.data.account.role);
+      setSocket(generateSocketInstance(result.payload.data.accessToken));
       router.push("/manage/dashboard");
       toast({
         description: result.payload.message,

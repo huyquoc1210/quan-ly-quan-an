@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { BookX, CookingPot, HandCoins, Loader, Truck } from "lucide-react";
+import { io } from "socket.io-client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -72,6 +73,7 @@ export const removeTokensFromLocalStorage = () => {
 export const checkAndRefreshToken = async (params?: {
   onSuccess?: () => void;
   onError?: () => void;
+  force?: boolean;
 }) => {
   const accessToken = getAccessTokenFromLocalStorage();
   const refreshToken = getRefreshTokenFromLocalStorage();
@@ -87,8 +89,9 @@ export const checkAndRefreshToken = async (params?: {
   }
 
   if (
+    params?.force ||
     decodeAccessToken.exp - now <
-    (decodeAccessToken.exp - decodeAccessToken.iat) / 3
+      (decodeAccessToken.exp - decodeAccessToken.iat) / 3
   ) {
     try {
       const role = decodeRefreshToken.role;
@@ -198,6 +201,14 @@ export const formatDateTimeToLocaleString = (date: string | Date) => {
 
 export const formatDateTimeToTimeString = (date: string | Date) => {
   return format(date instanceof Date ? date : new Date(date), "HH:mm:ss");
+};
+
+export const generateSocketInstance = (accessToken: string) => {
+  return io(envConfig.NEXT_PUBLIC_API_ENDPOINT, {
+    auth: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 };
 
 export const OrderStatusIcon = {

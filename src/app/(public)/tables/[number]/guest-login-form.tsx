@@ -13,7 +13,7 @@ import {
 } from "@/schemaValidations/guest.schema";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { handleErrorApi } from "@/lib/utils";
+import { generateSocketInstance, handleErrorApi } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useGuestLoginMutation } from "@/queries/useGuest";
 import { useAppContext } from "@/components/app-provider";
@@ -24,7 +24,7 @@ export default function GuestLoginForm() {
   const token = searchParams.get("token");
   const tableNumber = Number(params.number);
   const router = useRouter();
-  const { setRole } = useAppContext();
+  const { setRole, setSocket } = useAppContext();
   const guestLoginMutation = useGuestLoginMutation();
 
   // console.log(params, "searchParams:", searchParams.get("token"));
@@ -48,6 +48,7 @@ export default function GuestLoginForm() {
     try {
       const result = await guestLoginMutation.mutateAsync(values);
       setRole(result.payload.data.guest.role);
+      setSocket(generateSocketInstance(result.payload.data.accessToken));
       router.push("/guest/menu");
       toast({
         description: result.payload.message,
