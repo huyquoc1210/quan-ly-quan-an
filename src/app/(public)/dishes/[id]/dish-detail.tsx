@@ -1,15 +1,12 @@
-import dishApiRequest from "@/apiRequest/dishes";
-import { formatCurrency, wrapServerApi } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { DishResType } from "@/schemaValidations/dish.schema";
 import Image from "next/image";
-export default async function DishPage({
-  params: { id },
+
+export default async function DishDetail({
+  dish,
 }: {
-  params: {
-    id: string;
-  };
+  dish: DishResType["data"] | undefined;
 }) {
-  const data = await wrapServerApi(() => dishApiRequest.getDish(Number(id)));
-  const dish = data?.payload?.data;
   if (!dish)
     return (
       <div>
